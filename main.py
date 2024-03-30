@@ -8,7 +8,7 @@ def connectToDataBase():
     dbname = "Health and Fitness Club Management"
     user = "postgres"
     #use your own password here for the database. its 
-    password = "232189499"
+    password = "postgres"
     host = "localhost"
     port = "5432"
 
@@ -28,7 +28,7 @@ def createTable(conn):
     createTableSql = '''
     CREATE TABLE IF NOT EXISTS Members (
         MemberID SERIAL PRIMARY KEY,
-        Username VARCHAR(255) NOT NULL,
+        Name VARCHAR(255) NOT NULL,
         Email VARCHAR(255) UNIQUE NOT NULL,
         Password VARCHAR(255) NOT NULL,
         DateOfBirth DATE NOT NULL,
@@ -39,7 +39,7 @@ def createTable(conn):
 
     CREATE TABLE IF NOT EXISTS Trainers (
         TrainerID SERIAL PRIMARY KEY,
-        Username VARCHAR(255) NOT NULL,
+        Name VARCHAR(255) NOT NULL,
         Specialization VARCHAR(255)
     );
 
@@ -130,8 +130,21 @@ def main():
             except ValueError as error:
                 print(f'Error exists: {error}\nPlease try again!')
 
-        if userInput == 3:
-            print("\nExiting the program...")
+        if userInput == 1:
+            regis = registration()
+            
+            if regis == False:
+                print("Registration Failed. Please try again!\n")
+            else:
+                print("Registration completed. You can now login to your account!\n")
+        elif userInput == 2:
+            break
+            pass
+        elif userInput == 3:
+            ## Testing the monitor_equipment_maintenance function in admin.py
+            admin.monitor_equipment_maintenance(conn)
+        elif userInput == 4:
+            print("Exiting the system...")
             sys.exit()
         else:
             print("Please enter a valid option!\n")
