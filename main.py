@@ -129,8 +129,10 @@ def main():
         if userInput == 1:
             regis = registration()
             
-            if regis == True:
-                continue
+            if regis == False:
+                print("Registration Failed. Please try again!\n")
+            else:
+                print("Registration completed. You can now login to your account!\n")
         elif userInput == 2:
             break
             pass
