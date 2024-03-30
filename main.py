@@ -114,25 +114,6 @@ def main():
         if userInput == 3:
             print("\nExiting the program...")
             sys.exit()
-        # Finished this part up :)    
-        elif userInput == 1:
-            # Registration
-            member.register(conn)
-        elif userInput == 2:
-            # Login
-            user_type = member.login(conn)
-            # Different menus made but we have to initialize them in the admin.py, memeber.py, and trainer.py
-            if user_type == "admin":
-                admin_menu(conn)
-            elif user_type == "member":
-                member_menu(conn)
-            elif user_type == "trainer":
-                trainer_menu(conn)
-            else:
-                print("Invalid user type.")
-
-
-
-
+       
 
 main()
