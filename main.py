@@ -114,6 +114,7 @@ def main():
         if userInput == 3:
             print("\nExiting the program...")
             sys.exit()
+        # Finished this part up :)    
         elif userInput == 1:
             # Registration
             member.register(conn)
