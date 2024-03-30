@@ -121,6 +121,7 @@ def main():
         elif userInput == 2:
             # Login
             user_type = member.login(conn)
+            # Different menus made but we have to initialize them in the admin.py, memeber.py, and trainer.py
             if user_type == "admin":
                 admin_menu(conn)
             elif user_type == "member":
