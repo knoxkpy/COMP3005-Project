@@ -7,8 +7,8 @@ import psycopg
 def connectToDataBase():
     dbname = "Health and Fitness Club Management"
     user = "postgres"
-    #use your own password here for the database.
-    password = "232189499"
+    #use your own password here for the database. its 
+    password = "postgres"
     host = "localhost"
     port = "5432"
 
@@ -41,6 +41,12 @@ def createTable(conn):
         TrainerID SERIAL PRIMARY KEY,
         Name VARCHAR(255) NOT NULL,
         Specialization VARCHAR(255)
+    );
+
+    CREATE TABLE IF NOT EXISTS Admin (
+        AdminID SERIAL PRIMARY KEY,
+        Username VARCHAR(255) UNIQUE NOT NULL,
+        Password VARCHAR(255) NOT NULL
     );
 
     CREATE TABLE IF NOT EXISTS Rooms (
@@ -93,6 +99,15 @@ def createTable(conn):
     finally:
         cursor.close()
 
+def registration() -> bool:
+    print("\nWelcome to account registration.")
+
+    while True:
+        try:
+            regType = int(input("which type of account you want to register?\n1. Member 2. Trainer\n3. Admin\n*For trainer and admin registration, you need to have the invite code."))
+        except:
+            print("Please enter a valid input!\n")
+
 def main():
     conn = connectToDataBase()
     if (conn == False):
@@ -102,7 +117,11 @@ def main():
     createTable(conn)
 
     while True:
-        print("\nWelcome to the Health and Fitness Club Management System. Please select what you want to do.\n1. Registration \n2. Login\n3. Exit the system.\n")
+        print("\nWelcome to the Health and Fitness Club Management System. Please select what you want to do.")
+        print("1. Register an account")
+        print("2. Login")
+        print("3. Manage Room Booking")
+        print("4. Exit")
         
         while True:
             try:
@@ -111,9 +130,24 @@ def main():
             except ValueError as error:
                 print(f'Error exists: {error}\nPlease try again!')
 
-        if userInput == 3:
-            print("\nExiting the program...")
+        if userInput == 1:
+            regis = registration()
+            
+            if regis == False:
+                print("Registration Failed. Please try again!\n")
+            else:
+                print("Registration completed. You can now login to your account!\n")
+        elif userInput == 2:
+            break
+            pass
+        elif userInput == 3:
+            ## Testing the monitor_equipment_maintenance function in admin.py
+            admin.monitor_equipment_maintenance(conn)
+        elif userInput == 4:
+            print("Exiting the system...")
             sys.exit()
+        else:
+            print("Please enter a valid option!\n")
        
 
 main()
