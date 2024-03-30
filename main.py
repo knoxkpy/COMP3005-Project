@@ -93,6 +93,9 @@ def createTable(conn):
     finally:
         cursor.close()
 
+def registration() -> bool:
+    pass
+
 def main():
     conn = connectToDataBase()
     if (conn == False):
@@ -111,9 +114,18 @@ def main():
             except ValueError as error:
                 print(f'Error exists: {error}\nPlease try again!')
 
-        if userInput == 3:
+        if userInput == 1:
+            regis = registration()
+            
+            if regis == True:
+                break
+        elif userInput == 2:
+            pass
+        elif userInput == 3:
             print("\nExiting the program...")
             sys.exit()
+        else:
+            print("Please enter a valid option!\n")
        
 
 main()
