@@ -28,7 +28,7 @@ def createTable(conn):
     createTableSql = '''
     CREATE TABLE IF NOT EXISTS Members (
         MemberID SERIAL PRIMARY KEY,
-        Name VARCHAR(255) NOT NULL,
+        Username VARCHAR(255) NOT NULL,
         Email VARCHAR(255) UNIQUE NOT NULL,
         Password VARCHAR(255) NOT NULL,
         DateOfBirth DATE NOT NULL,
@@ -39,8 +39,14 @@ def createTable(conn):
 
     CREATE TABLE IF NOT EXISTS Trainers (
         TrainerID SERIAL PRIMARY KEY,
-        Name VARCHAR(255) NOT NULL,
+        Username VARCHAR(255) NOT NULL,
         Specialization VARCHAR(255)
+    );
+
+    CREATE TABLE IF NOT EXISTS Admin (
+        AdminID SERIAL PRIMARY KEY,
+        Username VARCHAR(255) UNIQUE NOT NULL,
+        Password VARCHAR(255) NOT NULL
     );
 
     CREATE TABLE IF NOT EXISTS Rooms (
