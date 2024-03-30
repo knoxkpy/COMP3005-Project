@@ -94,7 +94,13 @@ def createTable(conn):
         cursor.close()
 
 def registration() -> bool:
-    pass
+    print("\nWelcome to account registration.")
+
+    while True:
+        try:
+            regType = int(input("which type of account you want to register?\n1. Member 2. Trainer\n3. Admin\n*For trainer and admin registration, you need to have the invite code."))
+        except:
+            print("Please enter a valid input!\n")
 
 def main():
     conn = connectToDataBase()
@@ -118,8 +124,9 @@ def main():
             regis = registration()
             
             if regis == True:
-                break
+                continue
         elif userInput == 2:
+            break
             pass
         elif userInput == 3:
             print("\nExiting the program...")
