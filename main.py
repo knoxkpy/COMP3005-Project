@@ -99,14 +99,64 @@ def createTable(conn):
     finally:
         cursor.close()
 
-def registration() -> bool:
+def registration(conn):
     print("\nWelcome to account registration.")
 
-    while True:
-        try:
-            regType = int(input("which type of account you want to register?\n1. Member 2. Trainer\n3. Admin\n*For trainer and admin registration, you need to have the invite code."))
-        except:
-            print("Please enter a valid input!\n")
+    # Definitation for the invitation code for trainers and admins (assuming that for staff they need the special code to register.)
+    inviteCodeTrainer = 'TRAINER2024'
+    inviteCodeAdmin = 'ADMIN2024'
+
+    try:
+        regType = int(input("Which type of account do you want to register?\n1. Member\n2. Trainer\n3. Admin\n*For trainer and admin registration, you need to have the invite code: "))
+        
+        if regType not in [1, 2, 3]:
+            print("Please enter a valid option (1, 2, or 3)!")
+            return False
+
+        name = input("Enter your full name: ")
+        email = input("Enter your email: ")
+        password = input("Enter your password: ")
+
+        if regType == 1:  # Member registration
+            date_of_birth = input("Enter your date of birth (YYYY-MM-DD): ")
+            gender = input("Enter your gender: ")
+            fitness_goals = input("Enter your fitness goals: ")
+            health_metrics = input("Enter your initial health metrics (as JSON string, e.g., '{\"weight\": 70, \"height\": 175}'): ")
+
+            cursor = conn.cursor()
+            cursor.execute("INSERT INTO Members (Name, Email, Password, DateOfBirth, Gender, FitnessGoals, HealthMetrics) VALUES (%s, %s, %s, %s, %s, %s, %s)",
+                           (name, email, password, date_of_birth, gender, fitness_goals, health_metrics))
+            conn.commit()
+            print("Member registration completed successfully.")
+        elif regType in [2, 3]:  # Trainer or Admin registration
+            inviteCode = input("Enter your invite code: ")
+            correctInviteCode = inviteCodeTrainer if regType == 2 else inviteCodeAdmin
+            
+            if inviteCode != correctInviteCode:
+                print("Invalid invite code.")
+                return False
+
+            if regType == 2:  # Trainer
+                specialization = input("Enter your specialization: ")
+                cursor = conn.cursor()
+                cursor.execute("INSERT INTO Trainers (Name, Email, Password, Specialization) VALUES (%s, %s, %s, %s)",
+                               (name, email, password, specialization))
+                conn.commit()
+                print("Trainer registration completed successfully.")
+            elif regType == 3:  # Admin
+                cursor = conn.cursor()
+                cursor.execute("INSERT INTO Admin (Username, Password) VALUES (%s, %s)",
+                               (email, password))
+                conn.commit()
+                print("Admin registration completed successfully.")
+
+    except Exception as e:
+        print(f"An error occurred during registration: {e}")
+        conn.rollback()
+        return False
+
+    return True
+
 
 def main():
     conn = connectToDataBase()
@@ -141,7 +191,7 @@ def main():
             break
             pass
         elif userInput == 3:
-            ## Testing the monitor_equipment_maintenance function in admin.py
+            # Testing the monitor_equipment_maintenance function in admin.py
             admin.monitor_equipment_maintenance(conn)
         elif userInput == 4:
             print("Exiting the system...")
