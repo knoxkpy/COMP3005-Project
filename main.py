@@ -40,12 +40,15 @@ def createTable(conn):
     CREATE TABLE IF NOT EXISTS Trainers (
         TrainerID SERIAL PRIMARY KEY,
         Name VARCHAR(255) NOT NULL,
+        Email VARCHAR(255) UNIQUE NOT NULL,
+        Password VARCHAR(255) NOT NULL,
         Specialization VARCHAR(255)
     );
 
     CREATE TABLE IF NOT EXISTS Admin (
         AdminID SERIAL PRIMARY KEY,
         Username VARCHAR(255) UNIQUE NOT NULL,
+        Email VARCHAR(255) UNIQUE NOT NULL,
         Password VARCHAR(255) NOT NULL
     );
 
@@ -113,7 +116,7 @@ def registration(conn):
             print("Please enter a valid option (1, 2, or 3)!")
             return False
 
-        name = input("Enter your full name: ")
+        name = input("Enter your username: ")
         email = input("Enter your email: ")
         password = input("Enter your password: ")
 
@@ -131,7 +134,7 @@ def registration(conn):
         elif regType in [2, 3]:  # Trainer or Admin registration
             inviteCode = input("Enter your invite code: ")
             correctInviteCode = inviteCodeTrainer if regType == 2 else inviteCodeAdmin
-
+            
             if inviteCode != correctInviteCode:
                 print("Invalid invite code.")
                 return False
@@ -145,8 +148,8 @@ def registration(conn):
                 print("Trainer registration completed successfully.")
             elif regType == 3:  # Admin
                 cursor = conn.cursor()
-                cursor.execute("INSERT INTO Admin (Username, Password) VALUES (%s, %s)",
-                               (email, password))
+                cursor.execute("INSERT INTO Admin (Username, Email, Password) VALUES (%s, %s, %s)",
+                               (name, email, password))
                 conn.commit()
                 print("Admin registration completed successfully.")
 
