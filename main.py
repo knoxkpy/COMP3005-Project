@@ -28,7 +28,7 @@ def createTable(conn):
     createTableSql = '''
     CREATE TABLE IF NOT EXISTS Members (
         MemberID SERIAL PRIMARY KEY,
-        Name VARCHAR(255) NOT NULL,
+        Name VARCHAR(255) UNIQUE NOT NULL,
         Email VARCHAR(255) UNIQUE NOT NULL,
         Password VARCHAR(255) NOT NULL,
         DateOfBirth DATE NOT NULL,
@@ -39,7 +39,7 @@ def createTable(conn):
 
     CREATE TABLE IF NOT EXISTS Trainers (
         TrainerID SERIAL PRIMARY KEY,
-        Name VARCHAR(255) NOT NULL,
+        Name VARCHAR(255) UNIQUE NOT NULL,
         Email VARCHAR(255) UNIQUE NOT NULL,
         Password VARCHAR(255) NOT NULL,
         Specialization VARCHAR(255)
@@ -161,6 +161,25 @@ def registration(conn):
     return True
 
 
+def login(conn):
+    print("\nLogin to your account.")
+    username = input("Enter your username: ")
+    password = input("Enter your password: ")
+
+    cursor = conn.cursor()
+
+    # Check in each table for a match. This is a simple approach; for a real application, consider more efficient ways.
+    cursor.execute("SELECT 'Members' as Role FROM Members WHERE Name = %s AND Password = %s UNION SELECT 'Trainer' as Role FROM Trainers WHERE Name = %s AND Password = %s UNION SELECT 'Admin' as Role FROM Admin WHERE Username = %s AND Password = %s", (username, password, username, password, username, password))
+    result = cursor.fetchone()
+
+    if result:
+        role = result[0]
+        print(f"Login successful. You are logged in as a {role}.")
+        return role
+    else:
+        print("Login failed. Please check your credentials.")
+        return None
+
 def main():
     conn = connectToDataBase()
     if (conn == False):
@@ -191,8 +210,16 @@ def main():
             else:
                 print("Registration completed. You can now login to your account!\n")
         elif userInput == 2:
-            break
-            pass
+            role = login(conn)
+            if role == "Member":
+                member.showMemberMenu()
+                break
+            elif role == "Trainer":
+                trainer.showTrainerMenu()
+                break
+            elif role == "Admin":
+                admin.showAdminMenu()
+                break
         elif userInput == 3:
             # Testing the monitor_equipment_maintenance function in admin.py
             admin.monitor_equipment_maintenance(conn)
