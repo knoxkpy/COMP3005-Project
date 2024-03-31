@@ -131,7 +131,7 @@ def registration(conn):
         elif regType in [2, 3]:  # Trainer or Admin registration
             inviteCode = input("Enter your invite code: ")
             correctInviteCode = inviteCodeTrainer if regType == 2 else inviteCodeAdmin
-            
+
             if inviteCode != correctInviteCode:
                 print("Invalid invite code.")
                 return False
@@ -181,7 +181,7 @@ def main():
                 print(f'Error exists: {error}\nPlease try again!')
 
         if userInput == 1:
-            regis = registration()
+            regis = registration(conn)
             
             if regis == False:
                 print("Registration Failed. Please try again!\n")
