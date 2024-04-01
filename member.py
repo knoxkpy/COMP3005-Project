@@ -1,8 +1,78 @@
 import psycopg
 
-def showMemberMenu():
-    print("\nMember Menu:")
-    print("1. Update Profile")
-    print("2. Schedule Training Session")
-    print("3. View Dashboard")
-    # Implement functionalities
+def update_profile(conn, member_id):
+    print("\nProfile Management")
+    print("Leave it blank if you do not wish to change a field.")
+
+    name = input("Enter your new name: ")
+    email = input("Enter your new email: ")
+    password = input("Enter your new password: ")
+    date_of_birth = input("Enter your new date of birth (YYYY-MM-DD): ")
+    gender = input("Enter your new gender: ")
+    fitness_goals = input("Enter your new fitness goals: ")
+    health_metrics = input("Enter your new health metrics (as JSON string, e.g., '{\"weight\": 70, \"height\": 175}'): ")
+
+    update_fields = []
+    params = []
+
+    if name:
+        update_fields.append("Name = %s")
+        params.append(name)
+    if email:
+        update_fields.append("Email = %s")
+        params.append(email)
+    if password:
+        update_fields.append("Password = %s")
+        params.append(password)
+    if date_of_birth:
+        update_fields.append("DateOfBirth = %s")
+        params.append(date_of_birth)
+    if gender:
+        update_fields.append("Gender = %s")
+        params.append(gender)
+    if fitness_goals:
+        update_fields.append("FitnessGoals = %s")
+        params.append(fitness_goals)
+    if health_metrics:
+        update_fields.append("HealthMetrics = %s")
+        params.append(health_metrics)
+
+    if not update_fields:
+        print("No updates made.")
+        return
+
+    update_query = "UPDATE Members SET " + ", ".join(update_fields) + " WHERE MemberID = %s;"
+    params.append(member_id)
+
+    cursor = conn.cursor()
+    try:
+        cursor.execute(update_query, tuple(params))
+        conn.commit()
+        print("Profile updated successfully.")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        conn.rollback()
+
+def showMemberMenu(conn, memberId):
+    while True:
+        print("\nMember Menu:")
+        print("1. Profile Management")
+        print("2. Schedule Training Session")
+        print("3. View Dashboard")
+        print("4. Logout")
+
+        choice = input("Select an option: ")
+
+        if choice == "1":
+            update_profile(conn, memberId)
+        elif choice == "2":
+            # Implement schedule training session functionality
+            pass
+        elif choice == "3":
+            # Implement view dashboard functionality
+            pass
+        elif choice == "4":
+            print("Logging out...")
+            break
+        else:
+            print("Invalid option. Please try again.")

@@ -168,17 +168,24 @@ def login(conn):
 
     cursor = conn.cursor()
 
-    # Check in each table for a match. This is a simple approach; for a real application, consider more efficient ways.
-    cursor.execute("SELECT 'Members' as Role FROM Members WHERE Name = %s AND Password = %s UNION SELECT 'Trainer' as Role FROM Trainers WHERE Name = %s AND Password = %s UNION SELECT 'Admin' as Role FROM Admin WHERE Username = %s AND Password = %s", (username, password, username, password, username, password))
+    # Check in each table for a match and retrieve the ID as well.
+    cursor.execute("""
+        SELECT 'Members', MemberID FROM Members WHERE Name = %s AND Password = %s
+        UNION
+        SELECT 'Trainer', TrainerID FROM Trainers WHERE Name = %s AND Password = %s
+        UNION
+        SELECT 'Admin', AdminID FROM Admin WHERE Username = %s AND Password = %s
+    """, (username, password, username, password, username, password))
     result = cursor.fetchone()
 
     if result:
-        role = result[0]
+        role, user_id = result
         print(f"Login successful. You are logged in as a {role}.")
-        return role
+        return role, user_id
     else:
         print("Login failed. Please check your credentials.")
-        return None
+        return None, None
+
 
 def main():
     conn = connectToDataBase()
@@ -210,16 +217,13 @@ def main():
             else:
                 print("Registration completed. You can now login to your account!\n")
         elif userInput == 2:
-            role = login(conn)
-            if role == "Member":
-                member.showMemberMenu()
-                break
+            role, userId = login(conn)
+            if role == "Members":
+                member.showMemberMenu(conn, userId)
             elif role == "Trainer":
-                trainer.showTrainerMenu()
-                break
+                trainer.showTrainerMenu(conn, userId)
             elif role == "Admin":
-                admin.showAdminMenu()
-                break
+                admin.showAdminMenu(conn, userId)
         elif userInput == 3:
             # Testing the monitor_equipment_maintenance function in admin.py
             admin.monitor_equipment_maintenance(conn)
