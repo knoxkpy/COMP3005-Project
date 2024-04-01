@@ -52,6 +52,14 @@ def createTable(conn):
         Password VARCHAR(255) NOT NULL
     );
 
+    CREATE TABLE IF NOT EXISTS TrainerAvailability (
+        AvailabilityID SERIAL PRIMARY KEY,
+        TrainerID INT REFERENCES Trainers(TrainerID),
+        AvailableFrom TIMESTAMP NOT NULL,
+        AvailableTo TIMESTAMP NOT NULL,
+        Status VARCHAR(50) DEFAULT 'Available' NOT NULL
+    );
+
     CREATE TABLE IF NOT EXISTS Rooms (
         RoomID SERIAL PRIMARY KEY,
         RoomName VARCHAR(255) NOT NULL,

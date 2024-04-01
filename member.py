@@ -101,8 +101,15 @@ def schedulePersonalTraining(conn, memberId):
     for trainer_id, name in trainers:
         print(f"{trainer_id}: {name}")
     trainer_id = input("Select a trainer by ID: ")
-    date = input("Enter date for the session (YYYY-MM-DD): ")
-    time = input("Enter time for the session (HH:MM): ")
+
+    while True:
+        try:
+            date = input("Enter date for the session (YYYY-MM-DD): ")
+            time = input("Enter time for the session (HH:MM): ")
+            break
+        except Exception as e:
+            print(f"Error occured: {e}")
+            print('Please enter your Date and Time in correct format.')
 
     # Check trainer's availability
     cursor.execute("SELECT * FROM Bookings WHERE TrainerID = %s AND Date = %s AND Time = %s", (trainer_id, date, time))

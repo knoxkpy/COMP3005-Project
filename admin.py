@@ -1,13 +1,5 @@
 import psycopg
 
-def showAdminMenu():
-    print("\nAdmin Menu:")
-    print("1. Manage Room Bookings")
-    print("2. Monitor Equipment Maintenance")
-    print("3. Update Class Schedules")
-    print("4. Billing and Payment Processing")
-    # Implement functionalities
-
 def manage_room_booking(conn):
     # Function to manage room bookings 
     cursor = conn.cursor()
@@ -138,3 +130,12 @@ def update_class_schedule(conn):
 def process_billing_and_payments(conn):
     # Function to handle billing and payment processing
     pass
+
+def showAdminMenu():
+    while True:
+        print("\nAdmin Menu:")
+        print("1. Manage Room Bookings")
+        print("2. Monitor Equipment Maintenance")
+        print("3. Update Class Schedules")
+        print("4. Billing and Payment Processing")
+        # Implement functionalities
