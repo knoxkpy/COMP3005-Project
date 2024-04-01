@@ -207,8 +207,7 @@ def main():
         print("\nWelcome to the Health and Fitness Club Management System. Please select what you want to do.")
         print("1. Register an account")
         print("2. Login")
-        print("3. Manage Room Booking")
-        print("4. Exit")
+        print("3. Exit")
         
         while True:
             try:
@@ -233,9 +232,6 @@ def main():
             elif role == "Admin":
                 admin.showAdminMenu(conn, userId)
         elif userInput == 3:
-            # Testing the monitor_equipment_maintenance function in admin.py
-            admin.monitor_equipment_maintenance(conn)
-        elif userInput == 4:
             print("Exiting the system...")
             sys.exit()
         else:
