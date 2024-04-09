@@ -6,9 +6,9 @@ def showAdminMenu(conn, userId):
         print("\nAdmin Menu:")
         print("1. Manage Room Bookings")
         print("2. Monitor Equipment Maintenance")
-        print("3. Update Class Schedules")
+        print("3. Manage Class Schedules")
         print("4. Billing and Payment Processing")
-        print("5. Exit Admin Menu")
+        print("5. Exit Admin Menu (Logout)")
         choice = input("Choose an option: ")
         if choice == '1':
             manage_room_booking(conn)
@@ -19,6 +19,7 @@ def showAdminMenu(conn, userId):
         elif choice == '4':
             process_billing_and_payments(conn)
         elif choice == '5':
+            print("Logging out...")
             break
         else:
             print("Invalid choice. Please try again.")
