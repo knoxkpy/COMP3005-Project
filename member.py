@@ -93,34 +93,61 @@ def displayMemberDashboard(conn, member_id):
         print("\nNo fitness achievements recorded.")
 
 def schedulePersonalTraining(conn, memberId):
-    print("\nAvailable Trainers:")
+    print("\nAvailable Trainers and their available slots:")
     cursor = conn.cursor()
-    cursor.execute("SELECT TrainerID, Name FROM Trainers")
-    trainers = cursor.fetchall()
+    # Fetch trainers and their available slots
+    cursor.execute("""
+    SELECT t.TrainerID, t.Name, a.AvailabilityID, a.AvailableFrom, a.AvailableTo 
+    FROM Trainers t
+    JOIN TrainerAvailability a ON t.TrainerID = a.TrainerID
+    WHERE a.Status = 'Available' AND a.AvailableFrom > CURRENT_TIMESTAMP
+    ORDER BY t.TrainerID, a.AvailableFrom
+    """)
+    availabilities = cursor.fetchall()
 
-    for trainer_id, name in trainers:
-        print(f"{trainer_id}: {name}")
-    trainer_id = input("Select a trainer by ID: ")
-
-    while True:
-        try:
-            date = input("Enter date for the session (YYYY-MM-DD): ")
-            time = input("Enter time for the session (HH:MM): ")
-            break
-        except Exception as e:
-            print(f"Error occured: {e}")
-            print('Please enter your Date and Time in correct format.')
-
-    # Check trainer's availability
-    cursor.execute("SELECT * FROM Bookings WHERE TrainerID = %s AND Date = %s AND Time = %s", (trainer_id, date, time))
-    if cursor.fetchone():
-        print("This trainer is not available at the selected time.")
+    if not availabilities:
+        print("No trainers are currently available.")
         return
 
-    # Schedule the session
-    cursor.execute("INSERT INTO Bookings (MemberID, TrainerID, Date, Time) VALUES (%s, %s, %s, %s)", (memberId, trainer_id, date, time))
-    conn.commit()
-    print("Personal training session scheduled successfully.")
+    for trainer_id, name, availability_id, available_from, available_to in availabilities:
+        print(f"Trainer ID: {trainer_id}, Name: {name}, Slot ID: {availability_id}, From: {available_from}, To: {available_to}")
+
+    availability_id = input("Select an available slot by Slot ID: ")
+
+    # Fetch the chosen availability slot details
+    cursor.execute("""
+    SELECT TrainerID, AvailableFrom, AvailableTo
+    FROM TrainerAvailability
+    WHERE AvailabilityID = %s AND Status = 'Available'
+    """, (availability_id,))
+    chosen_slot = cursor.fetchone()
+
+    if not chosen_slot:
+        print("Invalid Slot ID or slot not available.")
+        return
+
+    trainer_id, available_from, available_to = chosen_slot
+
+    # assume the session takes the whole available slot
+    date = available_from.date()
+    time = available_from.time()
+
+    # Schedule the session by updating the TrainerAvailability status (or you could delete the slot to mark it as booked)
+    try:
+        cursor.execute("""
+        UPDATE TrainerAvailability SET Status = 'Booked' WHERE AvailabilityID = %s
+        """, (availability_id,))
+        
+        # Insert into Bookings table
+        cursor.execute("""
+        INSERT INTO Bookings (MemberID, TrainerID, ClassID, Date, Time) 
+        VALUES (%s, %s, NULL, %s, %s)
+        """, (memberId, trainer_id, date, time))
+        conn.commit()
+        print("Personal training session scheduled successfully.")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        conn.rollback()
 
 
 def joinGroupFitnessClass(conn, memberId):
@@ -165,30 +192,6 @@ def joinGroupFitnessClass(conn, memberId):
     except Exception as e:
         print(f"An error occurred while enrolling: {e}")
         conn.rollback()
-
-
-#older version
-# def joinGroupFitnessClass(conn, member_id):
-#     print("\nAvailable Fitness Classes:")
-#     cursor = conn.cursor()
-#     cursor.execute("""
-#         SELECT ClassID, ClassName, Schedule, Capacity - COALESCE((SELECT COUNT(*) FROM Bookings WHERE ClassID = Classes.ClassID), 0) AS AvailableSpots
-#         FROM Classes
-#         WHERE Schedule > CURRENT_TIMESTAMP
-#     """)
-#     classes = cursor.fetchall()
-
-#     for class_id, name, schedule, available_spots in classes:
-#         print(f"{class_id}: {name} at {schedule} - Spots Left: {available_spots}")
-#     class_id = input("Select a class by ID: ")
-
-#     if not classes:
-#         print("No available classes.")
-#         return
-
-#     cursor.execute("INSERT INTO Bookings (MemberID, ClassID, Date, Time) VALUES (%s, %s, %s, %s)", (member_id, class_id, date, time))
-#     conn.commit()
-#     print("Enrolled in fitness class successfully.")
 
 
 def showMemberMenu(conn, memberId):
