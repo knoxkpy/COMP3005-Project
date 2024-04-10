@@ -10,7 +10,7 @@ def update_profile(conn, member_id):
     date_of_birth = input("Enter your new date of birth (YYYY-MM-DD): ")
     gender = input("Enter your new gender: ")
     fitness_goals = input("Enter your new fitness goals: ")
-    health_metrics = input("Enter your new health metrics (as JSON string, e.g., '{\"weight\": 70, \"height\": 175}'): ")
+    health_metrics = input("Enter your new health metrics (as JSON string, e.g., '{\"weight\": 70, \"height\": 175}, \"achievements\": [{\"title\": \"5K Run\", \"date\": \"2023-01-01\"}, ...]'): ")
 
     update_fields = []
     params = []
@@ -87,8 +87,11 @@ def displayMemberDashboard(conn, member_id):
     # Example: "achievements": [{"title": "5K Run", "date": "2023-01-01"}, ...]
     if health_metrics and health_metrics[0] and "achievements" in health_metrics[0]:
         print("\nFitness Achievements:")
-        for achievement in health_metrics[0]["achievements"]:
-            print(f"  {achievement['title']} on {achievement['date']}")
+        try:
+            for achievement in health_metrics[0]["achievements"]:
+                print(f"  {achievement['title']} on {achievement['date']}")
+        except:
+            print("  Some error displaying the achievement. Please enter your achievement again.")
     else:
         print("\nNo fitness achievements recorded.")
 
@@ -137,7 +140,7 @@ def schedulePersonalTraining(conn, memberId):
         cursor.execute("""
         UPDATE TrainerAvailability SET Status = 'Booked' WHERE AvailabilityID = %s
         """, (availability_id,))
-        
+
         # Insert into Bookings table
         cursor.execute("""
         INSERT INTO Bookings (MemberID, TrainerID, ClassID, Date, Time) 
