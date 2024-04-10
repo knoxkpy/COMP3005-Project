@@ -35,7 +35,8 @@ def manage_room_booking(conn):
         print("2. Create a room booking for a class")
         print("3. Cancel an existing room booking")
         print("4. View available rooms")
-        print("5. Return to main menu")
+        print("5. Create a new room")
+        print("6. Return to main menu")
         choice = input("Choose an option: ")
 
         if choice == '1':
@@ -103,8 +104,24 @@ def manage_room_booking(conn):
             except Exception as e:
                 print(f"An error occurred: {e}")
                 conn.rollback()
-
+                
         elif choice == '5':
+            # Add a new room
+            room_name = input("Enter the new room name: ")
+            capacity = input("Enter the room capacity: ")
+
+            try:
+                cursor.execute("""
+                    INSERT INTO Rooms (RoomName, Capacity)
+                    VALUES (%s, %s)
+                """, (room_name, capacity))
+                conn.commit()
+                print("New room added successfully.")
+            except Exception as e:
+                print(f"An error occurred: {e}")
+                conn.rollback()
+
+        elif choice == '6':
             print("Returning to the main menu...")
             break
 
@@ -203,9 +220,36 @@ def update_class_schedule(conn):
             try:
                 class_name = input("Enter the class name: ")
                 room_id = input("Enter the room ID: ")
+                
+                #Fetching the capacity of the room
+                cursor.execute("SELECT Capacity FROM Rooms WHERE RoomID = %s;", (room_id,))
+                room_capacity_result = cursor.fetchone()
+                if room_capacity_result is None:
+                    print(f"No room found with ID {room_id}. Please try again with a valid ID.")
+                    continue
+                room_capacity = room_capacity_result[0]
+                
+                
+                # Fetching and displaying all trainers
+                print("\nFetching trainer details...")
+                cursor.execute("SELECT * FROM Trainers;")
+                trainers = cursor.fetchall()
+                print("\nTrainer Details:")
+                for trainer in trainers:
+                    print(f"Trainer ID: {trainer[0]}, Name: {trainer[1]}, Email: {trainer[2]}, Specialization: {trainer[4]}")
+                
+                
                 trainer_id = input("Enter the trainer ID: ")
                 schedule = input("Enter the schedule (YYYY-MM-DD HH:MM:SS): ")
-                capacity = input("Enter the capacity: ")
+                
+                #Input validation for capacity
+                while True:
+                    capacity = int(input("Enter the capacity: "))
+                    if capacity <= room_capacity:
+                        break
+                    else:
+                        print(f"Capacity exceeds the limit of the room (max {room_capacity}). Please enter a valid capacity.")
+                        
 
                 query = "INSERT INTO Classes (ClassName, RoomID, TrainerID, Schedule, Capacity) VALUES (%s, %s, %s, %s, %s);"
                 cursor.execute(query, (class_name, room_id, trainer_id, schedule, capacity))
@@ -260,7 +304,8 @@ def process_billing_and_payments(conn):
         print("\nBilling and Payment Processing")
         print("1. View all payments")
         print("2. Record a new payment")
-        print("3. Return to main menu")
+        print("3. Delete a payment record")
+        print("4. Return to main menu")
         choice = input("Choose an option: ")
 
         if choice == '1':
@@ -279,6 +324,15 @@ def process_billing_and_payments(conn):
         elif choice == '2':
             # Record a new payment
             try:
+                # Display all member details
+                print("\nFetching member details...")
+                cursor.execute("SELECT * FROM Members;")
+                members = cursor.fetchall()
+                print("\nMember Details:")
+                for member in members:
+                    print(f"Member ID: {member[0]}, Name: {member[1]}, Email: {member[2]}, Date of Birth: {member[4]}, Gender: {member[5]}, Fitness Goals: {member[6]}, Health Metrics: {member[7]}")
+                    
+                    
                 member_id = input("Enter the Member ID: ")
                 # Ensure the amount is numeric
                 while True:
@@ -301,8 +355,26 @@ def process_billing_and_payments(conn):
             except Exception as e:
                 print(f"An error occurred: {e}")
                 conn.rollback()
-
+                
         elif choice == '3':
+        # Delete a payment record
+            try:
+                payment_id = input("Enter the Payment ID to delete: ")
+                # Check if the payment ID exists
+                cursor.execute("SELECT COUNT(*) FROM Payments WHERE PaymentID = %s;", (payment_id,))
+                if cursor.fetchone()[0] == 0:
+                    print(f"No payment found with ID {payment_id}. Please try again with a valid ID.")
+                    continue
+
+                delete_query = "DELETE FROM Payments WHERE PaymentID = %s;"
+                cursor.execute(delete_query, (payment_id,))
+                conn.commit()
+                print("Payment record deleted successfully.")
+            except Exception as e:
+                print(f"An error occurred: {e}")
+                conn.rollback()
+
+        elif choice == '4':
             break
         else:
             print("Invalid choice. Please try again.")

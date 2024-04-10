@@ -56,6 +56,34 @@ def removeTrainerAvailability(conn, trainerID):
     except Exception as e:
         print(f"An error occurred: {e}")
         conn.rollback()
+        
+        
+def viewAssignedMemberProfiles(conn, trainerID):
+    cursor = conn.cursor()
+    try:
+        # Query to fetch members who have booked classes taught by this trainer
+        query = """
+        SELECT DISTINCT m.MemberID, m.Name, m.Email, m.DateOfBirth, m.Gender, m.FitnessGoals
+        FROM Members m
+        INNER JOIN Bookings b ON m.MemberID = b.MemberID
+        INNER JOIN Classes c ON b.ClassID = c.ClassID
+        WHERE c.TrainerID = %s;
+        """
+        cursor.execute(query, (trainerID,))
+        members = cursor.fetchall()
+        
+        if not members:
+            print("No members are currently assigned to your classes.")
+            return
+
+        print("\nMember Details for Your Classes:")
+        for member in members:
+            print(f"ID: {member[0]}, Name: {member[1]}, Email: {member[2]}, Date of Birth: {member[3]}, Gender: {member[4]}, Fitness Goals: {member[5]}")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        conn.rollback()
+
+
 
 
 def showTrainerMenu(conn, trainerID):
@@ -88,7 +116,7 @@ def showTrainerMenu(conn, trainerID):
             else:
                 print("Please enter a valid input.")
         elif userInput == "2":
-            pass
+            viewAssignedMemberProfiles(conn, trainerID)
         elif userInput == "3":
             print("Logging out...")
             break
