@@ -61,29 +61,76 @@ def removeTrainerAvailability(conn, trainerID):
 def viewAssignedMemberProfiles(conn, trainerID):
     cursor = conn.cursor()
     try:
-        # Query to fetch members who have booked classes taught by this trainer
+        # Query to fetch members who have booked classes or personal training sessions taught by this trainer
         query = """
-        SELECT DISTINCT m.MemberID, m.Name, m.Email, m.DateOfBirth, m.Gender, m.FitnessGoals
+        SELECT DISTINCT m.MemberID, m.Name, m.Email, m.DateOfBirth, m.Gender, m.FitnessGoals, m.HealthMetrics, 
+            CASE 
+                WHEN b.ClassID IS NULL THEN 'Personal Training Session' 
+                ELSE c.ClassName 
+            END as SessionType,
+            b.Date, b.Time
         FROM Members m
         INNER JOIN Bookings b ON m.MemberID = b.MemberID
-        INNER JOIN Classes c ON b.ClassID = c.ClassID
-        WHERE c.TrainerID = %s;
+        LEFT JOIN Classes c ON b.ClassID = c.ClassID
+        WHERE b.TrainerID = %s;
         """
         cursor.execute(query, (trainerID,))
         members = cursor.fetchall()
         
         if not members:
-            print("No members are currently assigned to your classes.")
+            print("No members are currently assigned to your classes or personal training sessions.")
             return
 
-        print("\nMember Details for Your Classes:")
+        print("\nMember Details for Your Classes and Personal Training Sessions:")
         for member in members:
-            print(f"ID: {member[0]}, Name: {member[1]}, Email: {member[2]}, Date of Birth: {member[3]}, Gender: {member[4]}, Fitness Goals: {member[5]}")
+            session_info = f"{member[7]} on {member[8]} at {member[9]}" if member[7] == 'Personal Training Session' else f"Class: {member[7]} on {member[8]} at {member[9]}"
+            print(f"ID: {member[0]}, Name: {member[1]}, Email: {member[2]}, Date of Birth: {member[3]}, Gender: {member[4]}, Fitness Goals: {member[5]}, Session Type: {session_info}")
+            print("Health Metrics:")
+            if member[6]:
+                for key, value in member[6].items():
+                    print(f"  {key}: {value}")
+            else:
+                print("  No health metrics available.")
     except Exception as e:
         print(f"An error occurred: {e}")
         conn.rollback()
 
 
+        
+        
+        
+def searchMemberProfileByName(conn, trainerID):
+    search_name = input("Enter the member's name to search: ")
+
+    cursor = conn.cursor()
+    try:
+        query = """
+        SELECT DISTINCT m.MemberID, m.Name, m.Email, m.DateOfBirth, m.Gender, m.FitnessGoals, m.HealthMetrics
+        FROM Members m
+        INNER JOIN Bookings b ON m.MemberID = b.MemberID
+        INNER JOIN Classes c ON b.ClassID = c.ClassID
+        WHERE c.TrainerID = %s AND m.Name ILIKE %s;
+        """
+        search_pattern = f'%{search_name}%'
+        cursor.execute(query, (trainerID, search_pattern))
+        members = cursor.fetchall()
+
+        if not members:
+            print("No members found with the given name.")
+            return
+
+        print("\nSearch Results:")
+        for member in members:
+            print(f"ID: {member[0]}, Name: {member[1]}, Email: {member[2]}, Date of Birth: {member[3]}, Gender: {member[4]}, Fitness Goals: {member[5]}")
+            print("Health Metrics:")
+            if member[6]:
+                for key, value in member[6].items():
+                    print(f"  {key}: {value}")
+            else:
+                print("  No health metrics available.")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        conn.rollback()
 
 
 def showTrainerMenu(conn, trainerID):
@@ -91,7 +138,8 @@ def showTrainerMenu(conn, trainerID):
         print("\nTrainer Menu:")
         print("1. Schedule Management")
         print("2. Member Profile Viewing")
-        print("3. Logout")
+        print("3. Search Member Profile by Name")
+        print("4. Logout")
         # Implement functionalities
 
         userInput = input('Please enter your option: ')
@@ -118,6 +166,8 @@ def showTrainerMenu(conn, trainerID):
         elif userInput == "2":
             viewAssignedMemberProfiles(conn, trainerID)
         elif userInput == "3":
+            searchMemberProfileByName(conn, trainerID)    
+        elif userInput == "4":
             print("Logging out...")
             break
         else:
