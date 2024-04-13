@@ -172,7 +172,7 @@ def joinGroupFitnessClass(conn, memberId):
     print("\nAvailable Fitness Classes:")
     cursor = conn.cursor()
     cursor.execute("""
-        SELECT ClassID, ClassName, Schedule, Capacity - COALESCE((SELECT COUNT(*) FROM Bookings WHERE ClassID = Classes.ClassID GROUP BY ClassID), 0) AS AvailableSpots
+        SELECT ClassID, ClassName, Schedule, TrainerID, Capacity - COALESCE((SELECT COUNT(*) FROM Bookings WHERE ClassID = Classes.ClassID GROUP BY ClassID), 0) AS AvailableSpots
         FROM Classes
         WHERE Schedule > CURRENT_TIMESTAMP
     """)
@@ -182,7 +182,7 @@ def joinGroupFitnessClass(conn, memberId):
         print("No available classes.")
         return
 
-    for classID, name, schedule, available_spots in classes:
+    for classID, name, schedule, trainerID, available_spots in classes:
         print(f"{classID}: {name} at {schedule} - Spots Left: {available_spots}")
 
     classID = input("Select a class by ID: ")
@@ -192,9 +192,10 @@ def joinGroupFitnessClass(conn, memberId):
         return
 
     date, time = chosen_class[2].date(), chosen_class[2].time()
+    trainerID = chosen_class[3]  # Fetch the TrainerID associated with the class
 
     # Check if there are available spots
-    if chosen_class[3] <= 0:
+    if chosen_class[4] <= 0:
         print("Sorry, no spots left for this class.")
         return
 
@@ -206,12 +207,13 @@ def joinGroupFitnessClass(conn, memberId):
 
     # Enroll in the class
     try:
-        cursor.execute("INSERT INTO Bookings (MemberID, ClassID, Date, Time) VALUES (%s, %s, %s, %s)", (memberId, classID, date, time))
+        cursor.execute("INSERT INTO Bookings (MemberID, ClassID, TrainerID, Date, Time) VALUES (%s, %s, %s, %s, %s)", (memberId, classID, trainerID, date, time))
         conn.commit()
         print("Enrolled in fitness class successfully.")
     except Exception as e:
         conn.rollback()
         print(f"An error occurred while enrolling: {e}")
+
 
 def checkMemberBills(conn, member_id):
     print("\nFetching your payment...")

@@ -61,18 +61,28 @@ def removeTrainerAvailability(conn, trainerID):
 def viewAssignedMemberProfiles(conn, trainerID):
     cursor = conn.cursor()
     try:
-        # Query to fetch members who have booked classes or personal training sessions taught by this trainer
         query = """
-        SELECT DISTINCT m.MemberID, m.Name, m.Email, m.DateOfBirth, m.Gender, m.FitnessGoals, m.HealthMetrics, 
-            CASE 
-                WHEN b.ClassID IS NULL THEN 'Personal Training Session' 
-                ELSE c.ClassName 
-            END as SessionType,
-            b.Date, b.Time
-        FROM Members m
-        INNER JOIN Bookings b ON m.MemberID = b.MemberID
-        LEFT JOIN Classes c ON b.ClassID = c.ClassID
-        WHERE b.TrainerID = %s;
+        SELECT 
+            m.MemberID, 
+            m.Name, 
+            m.Email, 
+            m.DateOfBirth, 
+            m.Gender, 
+            m.FitnessGoals, 
+            m.HealthMetrics, 
+            COALESCE(c.ClassName, 'Personal Training Session') AS SessionType,
+            b.Date, 
+            b.Time
+        FROM 
+            Members m
+        JOIN 
+            Bookings b ON m.MemberID = b.MemberID
+        LEFT JOIN 
+            Classes c ON b.ClassID = c.ClassID AND b.TrainerID = c.TrainerID
+        WHERE 
+            b.TrainerID = %s
+        ORDER BY 
+            b.Date, b.Time;
         """
         cursor.execute(query, (trainerID,))
         members = cursor.fetchall()
@@ -83,21 +93,11 @@ def viewAssignedMemberProfiles(conn, trainerID):
 
         print("\nMember Details for Your Classes and Personal Training Sessions:")
         for member in members:
-            session_info = f"{member[7]} on {member[8]} at {member[9]}" if member[7] == 'Personal Training Session' else f"Class: {member[7]} on {member[8]} at {member[9]}"
-            print(f"ID: {member[0]}, Name: {member[1]}, Email: {member[2]}, Date of Birth: {member[3]}, Gender: {member[4]}, Fitness Goals: {member[5]}, Session Type: {session_info}")
-            print("Health Metrics:")
-            if member[6]:
-                for key, value in member[6].items():
-                    print(f"  {key}: {value}")
-            else:
-                print("  No health metrics available.")
+            print(f"ID: {member[0]}, Name: {member[1]}, Email: {member[2]}, Date of Birth: {member[3]}, Gender: {member[4]}, Fitness Goals: {member[5]}, Health Metrics: {member[6]}, Session Type: {member[7]} on {member[8]} at {member[9]}")
     except Exception as e:
         print(f"An error occurred: {e}")
         conn.rollback()
 
-
-        
-        
         
 def searchMemberProfileByName(conn, trainerID):
     search_name = input("Enter the member's name to search: ")
