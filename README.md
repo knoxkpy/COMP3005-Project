@@ -12,5 +12,23 @@ How to run the program:
 
 For other parts of the reports, please check our submission in brightspace.
 
+Collaboration:
+Pak Yin, Kan (Knox Kan) (101260592):
+-	System design (overall, database)
+-	Login functionality (authentication. Authorization)
+-	ER diagram, ER mapping
+-	All member functions
+-	Trainer functions: Schedule Management (Trainer can set the time for which they are available.)
+-	Project report (this file)
+-	Demonstration
+
+Muhammed Burhan (101270831):
+-	System design (Database)
+-	Trainer functions: Member Profile Viewing (Search by Member’s name)
+-	All administrative Staff functions.
+-	DDL file preparation
+-	DML file preparation
+-	Demonstration
+
 Video demonstration:
 TBA
