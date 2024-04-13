@@ -13,6 +13,7 @@ How to run the program:
 For other parts of the reports, please check our submission in brightspace.
 
 Collaboration:
+
 Pak Yin, Kan (Knox Kan) (101260592):
 -	System design (overall, database)
 -	Login functionality (authentication. Authorization)
