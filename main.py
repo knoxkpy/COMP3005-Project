@@ -8,7 +8,7 @@ def connectToDataBase():
     dbname = "Health and Fitness Club Management"
     user = "postgres"
     #use your own password here for the database. its 
-    password = "postgres"
+    password = "232189499"
     host = "localhost"
     port = "5432"
 

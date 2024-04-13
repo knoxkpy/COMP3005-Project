@@ -72,28 +72,43 @@ def displayMemberDashboard(conn, member_id):
     SELECT Classes.ClassName, Classes.Schedule 
     FROM Bookings
     JOIN Classes ON Bookings.ClassID = Classes.ClassID
-    WHERE Bookings.MemberID = %s
+    WHERE Bookings.MemberID = %s AND Bookings.ClassID IS NOT NULL
     ORDER BY Classes.Schedule ASC
     """, (member_id,))
     classes = cursor.fetchall()
     if classes:
-        print("\nUpcoming Exercise Routines:")
+        print("\nUpcoming Exercise Routines (Group Classes):")
         for class_name, schedule in classes:
             print(f"  {class_name} at {schedule}")
     else:
-        print("\nYou have No upcoming exercise routines.")
+        print("\nYou have no upcoming group exercise routines.")
+
+    # Fetch personal training sessions
+    cursor.execute("""
+    SELECT Trainers.Name, Bookings.Date, Bookings.Time
+    FROM Bookings
+    JOIN Trainers ON Bookings.TrainerID = Trainers.TrainerID
+    WHERE Bookings.MemberID = %s AND Bookings.ClassID IS NULL
+    ORDER BY Bookings.Date, Bookings.Time ASC
+    """, (member_id,))
+    personal_trainings = cursor.fetchall()
+    if personal_trainings:
+        print("\nUpcoming Personal Training Sessions:")
+        for trainer_name, date, time in personal_trainings:
+            print(f"  Trainer: {trainer_name}, Date: {date}, Time: {time}")
+    else:
+        print("\nYou have no upcoming personal training sessions.")
 
     # For fitness achievements, achievements are part of HealthMetrics for simplicity
     # Example: "achievements": [{"title": "5K Run", "date": "2023-01-01"}, ...]
     if health_metrics and health_metrics[0] and "achievements" in health_metrics[0]:
         print("\nFitness Achievements:")
-        try:
-            for achievement in health_metrics[0]["achievements"]:
-                print(f"  {achievement['title']} on {achievement['date']}")
-        except:
-            print("  Some error displaying the achievement. Please enter your achievement again.")
+        achievements = health_metrics[0].get('achievements', [])
+        for achievement in achievements:
+            print(f"  {achievement['title']} on {achievement['date']}")
     else:
         print("\nNo fitness achievements recorded.")
+
 
 def schedulePersonalTraining(conn, memberId):
     print("\nAvailable Trainers and their available slots:")
@@ -171,20 +186,22 @@ def joinGroupFitnessClass(conn, memberId):
         print(f"{classID}: {name} at {schedule} - Spots Left: {available_spots}")
 
     classID = input("Select a class by ID: ")
-
-    # Validate classID input and ensure it corresponds to one of the displayed classes
     chosen_class = next((cls for cls in classes if str(cls[0]) == classID), None)
     if not chosen_class:
         print("Invalid class ID selected.")
         return
 
-    # Extract date and time from the chosen class's schedule for insertion
-    # OR these dates should be the dates of registration?
     date, time = chosen_class[2].date(), chosen_class[2].time()
 
     # Check if there are available spots
     if chosen_class[3] <= 0:
         print("Sorry, no spots left for this class.")
+        return
+
+    # Check if the member is already enrolled
+    cursor.execute("SELECT * FROM Bookings WHERE MemberID = %s AND ClassID = %s", (memberId, classID))
+    if cursor.fetchone():
+        print("You are already enrolled in this class.")
         return
 
     # Enroll in the class
@@ -193,8 +210,30 @@ def joinGroupFitnessClass(conn, memberId):
         conn.commit()
         print("Enrolled in fitness class successfully.")
     except Exception as e:
-        print(f"An error occurred while enrolling: {e}")
         conn.rollback()
+        print(f"An error occurred while enrolling: {e}")
+
+def checkMemberBills(conn, member_id):
+    print("\nFetching your payment...")
+    cursor = conn.cursor()
+    
+    # Retrieve payments made by the member
+    cursor.execute("""
+        SELECT PaymentID, Amount, PaymentDate, Service 
+        FROM Payments 
+        WHERE MemberID = %s
+        ORDER BY PaymentDate DESC
+    """, (member_id,))
+
+    payments = cursor.fetchall()
+
+    if not payments:
+        print("You have no payment at this moment.")
+    else:
+        print("\nYour pending payment(s):")
+        for payment in payments:
+            payment_id, amount, payment_date, service = payment
+            print(f"Payment ID: {payment_id}, Amount: ${amount:.2f}, Date: {payment_date}, Service: {service}")
 
 
 def showMemberMenu(conn, memberId):
@@ -203,7 +242,8 @@ def showMemberMenu(conn, memberId):
         print("1. Profile Management")
         print("2. Schedule Training Session")
         print("3. View Dashboard")
-        print("4. Logout")
+        print("4. Check your bill")
+        print("5. Logout")
 
         choice = input("Select an option: ")
 
@@ -226,7 +266,9 @@ def showMemberMenu(conn, memberId):
                     print("Invalid option selected.")
         elif choice == "3":
             displayMemberDashboard(conn, memberId)
-        elif choice == "4":
+        elif choice == '4':
+            checkMemberBills(conn, memberId)
+        elif choice == "5":
             print("Logging out...")
             break
         else:
